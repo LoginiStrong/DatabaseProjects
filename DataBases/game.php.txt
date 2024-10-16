@@ -1,0 +1,127 @@
+<html>
+<head>
+    <title>Finish the Lyrics!</title>
+</head>
+<body>
+    <?php
+    $DBName = "website";
+    $dbc = @mysqli_connect("lstrong.clo66w4iezhq.us-east-1.rds.amazonaws.com", "admin", "password", $DBName); 
+    $value = 1;
+    $score = 0;
+    $correctChoice = 0;
+    $Display = true;
+    $Finished = false;
+    if (isset($_POST['Submit']))
+    {
+        unset($_POST['Submit']);
+        $radioVal = 5;
+       //inserts the email into the email section of the submission table as well as the favorite film message
+       //$SQLString = "INSERT INTO submission values ('" . $email . "','" . $message . "');"; 
+       
+       //$Display = false;
+       //echo $value;
+       //$value++;
+       
+       //echo $value;
+        $Display = false;
+
+        $sql = "SELECT * FROM PLAYER where PLAYER_ID = 1;";
+        $rs  = mysqli_query($dbc, $sql);
+        $row = mysqli_fetch_assoc($rs);
+        $value = $row['PLAYER_TURN'];
+        $score = $row['PLAYER_SCORE'];
+
+
+        $sql = "SELECT * FROM QUESTION where QUESTION_ID = $value;";
+        $rs  = mysqli_query($dbc, $sql); 
+        $row = mysqli_fetch_assoc($rs);
+        $correctChoice = $row['CORRECT_CHOICE'];
+        
+        if (isset($_POST['choice']))
+        {
+            $radioVal = $_POST["choice"];
+        }
+
+        if ($correctChoice == $radioVal)
+        {
+            $score++;
+            $sql = "UPDATE PLAYER SET PLAYER_SCORE = $score WHERE PLAYER_ID = 1;";
+            $rs  = mysqli_query($dbc, $sql);
+        }
+
+        echo $score;
+        $value++;
+        echo $value;
+       if ($value > 10)
+       {
+            $sql = "UPDATE PLAYER SET PLAYER_TURN = 0 WHERE PLAYER_ID = 1;";
+            $rs  = mysqli_query($dbc, $sql);
+            $Finished = true;
+       }
+       else
+       {
+            $sql = "UPDATE PLAYER SET PLAYER_TURN = $value WHERE PLAYER_ID = 1;";
+            $rs  = mysqli_query($dbc, $sql);
+       }
+    }
+
+    if ($Display == true)
+    {
+        $sql = "DELETE FROM PLAYER;";
+        $rs  = mysqli_query($dbc, $sql);
+        $sql = "INSERT INTO PLAYER VALUES (1, 'player', $score, $value)";
+        $rs  = mysqli_query($dbc, $sql);
+    }
+
+    
+    
+    if ($Finished == false)
+    {
+
+        $sql = "SELECT * FROM QUESTION where QUESTION_ID = $value;";
+        $rs  = mysqli_query($dbc, $sql); 
+        $row = mysqli_fetch_assoc($rs);
+        $question = $row['QUESTION'];
+        $choice_1 = $row['CHOICE_1'];
+        $choice_2 = $row['CHOICE_2'];
+        $choice_3 = $row['CHOICE_3'];
+        $choice_4 = $row['CHOICE_4'];
+        echo $question;
+        //$questionArray = array(); //Array that holds each individual image path in from left to right order
+        //$questionArray[] = 
+
+        ?>
+
+
+    <form action="game.php" method="post">
+        <input type="radio" id="choice_1" name="choice" value=1>
+        <label for="choice_1"><?php echo $choice_1 ?></label><br>
+        <input type="radio" id="choice_2" name="choice" value=2>
+        <label for="choice_2"><?php echo $choice_2 ?></label><br>
+        <input type="radio" id="choice_3" name="choice" value=3>
+        <label for="choice_3"><?php echo $choice_3 ?></label><br>
+        <input type="radio" id="choice_4" name="choice" value=4>
+        <label for="choice_4"><?php echo $choice_4 ?></label><br>
+        <input type="submit" name="Submit" value="Submit" />
+    </form>
+<?php
+    }   
+    else
+    {
+        
+        echo "finished!!!!";
+        mysqli_close($dbc);
+?>
+        <form action="scorescreen.php" method="post">
+        <input type="hidden" id="score" name="score" value=<?php echo $score ?>>
+        <label for="message">Enter your initials here!</label><br />
+        <textarea id="message" name="message" rows="1" cols="3" required></textarea>
+        <input type="submit" name="Enter" value="Enter" />
+        </form>
+
+<?php
+    } 
+?>
+
+</body>
+</html>
